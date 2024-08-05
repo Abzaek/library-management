@@ -1,7 +1,6 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 
 	model "github.com/Abzaek/library_management/models"
@@ -40,26 +39,42 @@ func (lib *Library) RemoveBook(bookID int) {
 		return
 	}
 
+	if b.Status == "Not Available" {
+		fmt.Println("a borrowed book cannot be removed")
+		return
+	}
+
 	delete(lib.AllBooks, bookID)
 	fmt.Println("Successfully Removed!")
+
 }
 
-func (lib *Library) BorrowBook(bookID int, memberID int) error {
-	book := lib.AllBooks[bookID]
+func (lib *Library) BorrowBook(bookID int, memberID int) {
+	book, exists := lib.AllBooks[bookID]
+
+	if !exists {
+		fmt.Printf("there is no book with ID %d\n", bookID)
+		return
+	}
 
 	if book.Status == "Not Available" {
-		return errors.New(`book is not available`)
+		fmt.Println(`book is not available`)
+		return
 	}
+
 	member := lib.Members[memberID]
 
 	member.BorrowedBooks = append(member.BorrowedBooks, book)
 	book.Status = "Not Available"
 
-	return errors.New("Successful")
+	lib.AllBooks[bookID] = book
+	lib.Members[memberID] = member
+
+	fmt.Println("Borrowal succesful")
 
 }
 
-func (lib *Library) ReturnBook(bookID int, memberId int) error {
+func (lib *Library) ReturnBook(bookID int, memberId int) {
 	book := lib.AllBooks[bookID]
 	book.Status = "Available"
 
@@ -74,12 +89,14 @@ func (lib *Library) ReturnBook(bookID int, memberId int) error {
 	}
 
 	member.BorrowedBooks = newSlice
+
 	lib.Members[memberId] = member
 	lib.AllBooks[bookID] = book
-	return errors.New("successfully returned!")
+
+	fmt.Println("successfully returned!")
 }
 
-func (lib *Library) ListAvailableBooks() []model.Book {
+func (lib *Library) ListAvailableBooks() {
 	newSlice := []model.Book{}
 
 	for _, book := range lib.AllBooks {
@@ -87,9 +104,9 @@ func (lib *Library) ListAvailableBooks() []model.Book {
 			newSlice = append(newSlice, book)
 		}
 	}
-	return newSlice
+	fmt.Println(newSlice)
 }
 
-func (lib *Library) ListBorrowedBooks(memberID int) []model.Book {
-	return lib.Members[memberID].BorrowedBooks
+func (lib *Library) ListBorrowedBooks(memberID int) {
+	fmt.Println(lib.Members[memberID].BorrowedBooks)
 }
